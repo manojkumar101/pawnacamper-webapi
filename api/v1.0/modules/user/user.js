@@ -2,13 +2,9 @@ const con = require('../../../../helpers');
 const util = require('util');
 const query = util.promisify(con.query).bind(con);
 const functions = require('../../../../helpers');
-const commondbObj = require('../common/database');
 // const config = require('../../../../config');
 // const validator = require('validator');
 const { messages, statusCode } = require('../../../../constants');
-const web3Function = require('../web3/web3.function');
-const isValidDomain = require('is-valid-domain');
-const { web3, emeraldNodesContract } = require('../web3/web3.config');
 
 
 class UserService {

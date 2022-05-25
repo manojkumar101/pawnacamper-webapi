@@ -13,6 +13,7 @@ const  {
   CRYPTO_KEY,
   TOKEN_KEY,
   SMTPHost,
+  API_HOST ,
   SMTPemailAddress,
   SMTPPassword,
 
@@ -26,6 +27,7 @@ module.exports={
   DATABASE_USER,
   DATABASE_PASSWORD,
   DATABASE_NAME,
+  API_HOST ,
   SECRET_KEY,
   CRYPTO_KEY,
   TOKEN_KEY,

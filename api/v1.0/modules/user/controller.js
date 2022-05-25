@@ -1,5 +1,4 @@
 const userServiceObject = require('./user');
-const commonObj = require('../common/common');
 const {responseFormater}= require('../../../../utils');
 const logger = require('../../../../helpers/logger');
 const { messages, statusCode } = require('../../../../constants');
