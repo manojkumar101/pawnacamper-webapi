@@ -6,248 +6,39 @@ const functions = require('../../../../helpers');
 // const validator = require('validator');
 const { messages, statusCode } = require('../../../../constants');
 
-
 class UserService {
   /**
-   * @description - Function to connect wallet i.e login/signup the user
-   * @param {*} info - request body data of user to connect wallet
+   * @description - Function to add_camp_location
+   * @param {*} info - request body data
    */
-  async connectWallet(info) {
+  async add_camp_location(req) {
     try {
-      let walletAdress = info.wallet_address ? info.wallet_address : null;
-
-      if (!walletAdress) {
-        return {
-          code: statusCode.bad_request,
-          message: messages.invalidDetails,
-          data: {},
-        };
-      }
-  
-      walletAdress = await web3Function.getCheckedSumAddress(walletAdress);
-
-      const msqlProcedureCall = 'call connectWallet(?)';
-      const userDbResp = await query(msqlProcedureCall, [walletAdress]);
-
-      if (!userDbResp[0][0]) {
-        return {
-          code: statusCode.internal_server_error,
-          message: messages.noData,
-          data: {},
-        };
-      }
-
-      const userDetails = userDbResp[0][0];
-      const token = await functions.tokenEncrypt(userDetails);
-      const userInfo = {
-        wallet_address: userDetails.wallet_address,
-        auth_token: token
-      };
-      return {
-        code: statusCode.success,
-        message: messages.success,
-        data: userInfo,
-      };
-    } catch (error) {
-      throw {
-        code: statusCode.internal_server_error,
-        message: error.message,
-        data: {},
-      };
-    }
-  }
-
-  /**
-   * @description - Function to create a node
-   * @param {*} info - request body data of user create a node
-   */
-  async submitNode(info, tokenInfo) {
-    try {
-      let { description, node_name } = info;
-
-      if (!node_name || !description) {
-        return {
-          code: statusCode.bad_request,
-          message: messages.invalidDetails,
-          data: {},
-        };
-      }
-      const domainValid = isValidDomain(`${node_name}.emeraldnodes.finance`, {
-        subdomain: true,
-      });
-
-      if (!domainValid) {
-        return {
-          code: statusCode.bad_request,
-          message: messages.invalidSubDomain,
-          data: {},
-        };
-      }
-      node_name = node_name.trim();
-      const walletAddress = tokenInfo.wallet_address;
-      const userId = tokenInfo.user_id;
-
-      // const msqlqueryCall = 'select count(id) as count from node where name =  ? and is_deleted = 0';
-      const nodeNameAlreadyExist = await commondbObj.commonDb().getNode({node_name});
-      console.log(nodeNameAlreadyExist);
-      if(Object.keys(nodeNameAlreadyExist).length !== 0){
-        return{
-          code: statusCode.conflict, 
-          message: messages.nodeExist, 
-          data: {}
-        };
-      } 
-
-      const https_endpoint = `https://${node_name}.emeraldnodes.finance/ext/bc/C/rpc`;
-      const wss_endpoint = `wss://${node_name}.emeraldnodes.finance/ws`;
-      const data = {
-        userId,
-        wallet_address: walletAddress,
-        node_name,
-        description,
-        https_endpoint,
-        wss_endpoint,
-      };
-      console.log("before submit node");
-      const nodeDetails = await commondbObj.commonDb().submitNode(data);
-      console.log("After submit node");
-      // const nodeDetails = {};
-      return {
-        code: statusCode.success,
-        message: messages.success,
-        data: {
-          node_id: nodeDetails.node_id,
-        },
-      };
-    } catch (error) {
-      throw {
-        code: statusCode.internal_server_error,
-        message: error.message,
-        data: {},
-      };
-    }
-  }
-
-  /**
-   * @description - Function to get the reward details pf the user
-   * @param {*} tokenInfo - token passed in the header auth-token
-   */
-  async getReward(tokenInfo) {
-    try {
-      const wallet_address = tokenInfo.wallet_address;
-
-      const msqlProcedureCall = 'call getReward(?);';
-      const rewardDBResp = await query(msqlProcedureCall, [wallet_address]);
-
-      if (!rewardDBResp[0][0]) {
-        return {
-          code: statusCode.internal_server_error,
-          message: messages.noData,
-          data: {},
-        };
-      }
-
-      const rewardDetails = rewardDBResp[0][0];
-
-      return {
-        code: statusCode.success,
-        message: messages.success,
-        data: rewardDetails,
-      };
-    } catch (error) {
-      throw {
-        code: statusCode.internal_server_error,
-        message: error.message,
-        data: {},
-      };
-    }
-  }
-
-  /**
-   * @description - Function to get the claimed reward details pf the user
-   * @param {*} tokenInfo - token passed in the header auth-token
-   * @param {*} options - query params
-   */
-  async getClaimedRewardList(options, tokenInfo) {
-    try {
-      const wallet_address = tokenInfo.wallet_address;
-      const limit = options.limit ? parseInt(options.limit) : null;
-      let offset = options.offset ? parseInt(options.offset) : null;
-
-      offset = (offset - 1) * limit;
-      const mysqlProcedureCall = 'call getClaimedRewardList(?,?,?)';
-
-      const claimedRewardListDBResp = await query(mysqlProcedureCall, [
-        wallet_address,
-        offset,
-        limit,
-      ]);
-
-      if (!claimedRewardListDBResp[0][0]) {
-        return {
-          code: statusCode.internal_server_error,
-          message: messages.noData,
-          data: {},
-        };
-      }
-
-      const claimedRewardList = JSON.parse(
-        claimedRewardListDBResp[0][0].result
-      );
-
-      return {
-        code: statusCode.success,
-        message: messages.success,
-        data: claimedRewardList,
-      };
-    } catch (error) {
-      throw {
-        code: statusCode.internal_server_error,
-        message: error.message,
-        data: {},
-      };
-    }
-  }
-
-  async getTransactionHistoryList(options, tokenInfo) {
-    try {
-      const userId = tokenInfo ? tokenInfo.user_id : null;
-      const limit = options.limit ? parseInt(options.limit) : null;
-      const offset = options.limit
-        ? parseInt((options.offset - 1) * limit)
+      let reqBody = req.body;
+      let LocationId = Number(reqBody.LocationId)
+        ? Number(reqBody.LocationId)
         : null;
-      let sort_by = options.sort_by ? options.sort_by : '';
-      let order_by = options.order_by ? options.order_by : '';
+      let LocationName = reqBody.LocationName;
+      let LocationImage = reqBody.LocationImage;
+      let Price = reqBody.Price;
+      let Description = reqBody.Description;
+      let GoogleMapUrl = reqBody.GoogleMapUrl;
+      let DiscountPercentage = reqBody.DiscountPercentage;
 
-      // console.log('userId', userId);
-      const mysqlProcedureCall =
-        'call getTransactionHistoryList(?, ?, ?, ?, ?)';
-
-      const transactionHistoryList = await query(mysqlProcedureCall, [
-        userId,
-        sort_by,
-        order_by,
-        offset,
-        limit,
+      const createQuery = 'call manage_site_locate(?,?,?,?,?,?,?)';
+      await query(createQuery, [
+        LocationId,
+        LocationName,
+        LocationImage,
+        Price,
+        Description,
+        GoogleMapUrl,
+        DiscountPercentage,
       ]);
 
-      // console.log(transactionHistoryList[0][0]);
-      if (!transactionHistoryList[0][0]) {
-        return {
-          code: statusCode.internal_server_error,
-          message: messages.noData,
-          data: {},
-        };
-      }
-
-      const transactionHistory = await JSON.parse(
-        transactionHistoryList[0][0].result
-      );
-
       return {
         code: statusCode.success,
         message: messages.success,
-        data: transactionHistory,
+        data: [],
       };
     } catch (error) {
       throw {
@@ -257,36 +48,39 @@ class UserService {
       };
     }
   }
-
-  async getRewardList(tokenInfo, options) {
+  /**
+   * @description - Function to addSiteImages
+   * @param {*} info - request body data
+   */
+  async addSiteImages(req) {
     try {
-      const wallet_address = tokenInfo.wallet_address;
-      const limit = options.limit ? parseInt(options.limit) : null;
-      let offset = options.offset ? parseInt(options.offset) : null;
-
-      offset = (offset - 1) * limit;
-      const mysqlProcedureCall = 'call getRewardList(?,?,?)';
-
-      const rewardListDBResp = await query(mysqlProcedureCall, [
-        wallet_address,
-        offset,
-        limit,
+      let reqBody = req.body;
+      let GallaryId = Number(reqBody.GallaryId)
+        ? Number(reqBody.GallaryId)
+        : null;
+      let LocationId = Number(reqBody.LocationId)
+        ? Number(reqBody.LocationId)
+        : null;
+      let LocationName = reqBody.LocationName
+        ? reqBody.LocationName
+        : null;
+      let LocationImage =reqBody.LocationImage
+        ? reqBody.LocationImage
+        : null;
+      let DeleteImage = null
+      const manageQuery = 'call manage_gallary(?,?,?,?,?)';
+      await query(manageQuery, [
+        GallaryId,
+        LocationId,
+        LocationName,
+        LocationImage,
+        DeleteImage
       ]);
 
-      if (!rewardListDBResp[0][0]) {
-        return {
-          code: statusCode.internal_server_error,
-          message: messages.noData,
-          data: {},
-        };
-      }
-
-      const rewardList = await JSON.parse(rewardListDBResp[0][0].result);
-
       return {
         code: statusCode.success,
         message: messages.success,
-        data: rewardList,
+        data: [],
       };
     } catch (error) {
       throw {
@@ -296,45 +90,31 @@ class UserService {
       };
     }
   }
-  async getRewardMetaData(tokenInfo) {
+  /**
+   * @description - Function to availableSiteLocation
+   * @param {*} info - request body data
+   */
+  async availableSiteLocation() {
     try {
-      const wallet_address = tokenInfo.wallet_address;
-      // console.log("enode contract", emeraldNodesContract)
-      let result = await emeraldNodesContract.methods
-        .viewTotalReward(wallet_address)
-        .call();
-      console.log(result);
-      let TotalUserReward = await web3.utils.fromWei(result.TotalUserReward, 'ether');
-      let RewardAlreadyClaimed = await web3.utils.fromWei(
-        result.RewardAlreadyClaimed,
-        'ether'
-      );
-      let RewardToBeClaimed =await web3.utils.fromWei(
-        result.RewardToBeClaimed,
-        'ether'
-      );
-
-      let finalOutput = {
-        TotalUserReward,
-        RewardAlreadyClaimed,
-        RewardToBeClaimed,
-      };
+      const getQuery = `
+                            SELECT 
+                                    id as Id,
+                                    location_name as LocationName,
+                                    location_pic_url as LocationImage,
+                                    location_price as Price,
+                                    location_description as Description,
+                                    google_map_url as GoogleMapUrl,
+                                    discount_price as DiscountPercentage
+                            FROM tbl_camp_location;
+                        `;
+     let siteLocationArray= await query(getQuery);
 
       return {
         code: statusCode.success,
         message: messages.success,
-        data: finalOutput,
+        data: siteLocationArray,
       };
     } catch (error) {
-
-      if(error.message === messages.executionReverted){
-        return {
-          code: statusCode.success,
-          message: messages.success,
-          data: {}
-        };
-      }
-
       throw {
         code: statusCode.internal_server_error,
         message: error.message,
@@ -342,68 +122,184 @@ class UserService {
       };
     }
   }
-  async getRewardHistory(tokenInfo) {
+  /**
+   * @description - Function to getSiteImage
+   * @param {*} info - request body data
+   */
+  async getSiteImage() {
     try {
-      // const wallet_address = tokenInfo.wallet_address;
-      
-      const wallet_address = tokenInfo.wallet_address;
-
-      let result = await emeraldNodesContract.methods
-        .viewAllDetails(wallet_address)
-        .call();
-      let {
-        NodeIds,
-        TierIds,
-        TotalNodeRewards,
-        RewardAlreadyClaimeds,
-        RewardToBeClaimeds,
-      } = result;
-    
-      let getQuery='select id as node_id, wallet_address, tier_id,contract_generated_node_id,name as node_name ,node_status,created_utc_date from  node where wallet_address = ? and contract_generated_node_id is not null;';
-      let nodeData=await query(getQuery,[wallet_address]);
-      
-      let finalResponse=[];
-      let recordLength=NodeIds.length;
-      for(let i=0;i<recordLength ;i++){
-        let NodeObject= nodeData.filter((obj)=>{
-          return obj.contract_generated_node_id && Number(obj.contract_generated_node_id) == Number(NodeIds[i]);
-        });
-        // console.log(NodeObject);
-        // console.log(nodeData);
-        let TotalReward =await web3.utils.fromWei(TotalNodeRewards[i], 'ether');
-        let claimedReward = await web3.utils.fromWei(RewardAlreadyClaimeds[i], 'ether');
-        let availableReward = await web3.utils.fromWei(RewardToBeClaimeds[i], 'ether');
-
-        let recordObject={
-          contractGeneratedNodeId: Number(NodeIds[i]),
-          NodeId: NodeObject.length ? NodeObject[0].node_id : '',
-          NodeName : NodeObject.length ? NodeObject[0].node_name : 'Not Available',
-          TierId :Number(TierIds[i]),
-          TotalReward,
-          claimedReward,
-          availableReward,
-          created_at:NodeObject.length ? NodeObject[0].created_utc_date : 'Not Available',
-        };
-        if(recordObject.TotalReward > 0)
-        { 
-          finalResponse.push(recordObject);
-        }
-      }
+      const getQuery = `
+                        SELECT 
+                            id as Id,
+                            site_id as LocationId,
+                            name as Name,
+                            image_url as ImageUrl
+                        FROM tbl_image;
+                        `;
+     let siteLocationArray= await query(getQuery);
 
       return {
         code: statusCode.success,
         message: messages.success,
-        data: finalResponse,
+        data: siteLocationArray,
       };
     } catch (error) {
-      console.log('getRewardMetaData ~ error', error);
-      if(error.message === messages.executionReverted){
-        return {
-          code: statusCode.success,
-          message: messages.success,
-          data: {}
-        };
-      }
+      throw {
+        code: statusCode.internal_server_error,
+        message: error.message,
+        data: {},
+      };
+    }
+  }
+  /**
+   * @description - Function to removeGallaryImage
+   * @param {*} info - request body data
+   */
+  async removeGallaryImage(req) {
+    try {
+          let reqBody = req.body;
+          let GallaryId = Number(reqBody.GallaryId)
+            ? Number(reqBody.GallaryId)
+            : null;
+          let LocationId = null;
+          let LocationName = null;
+          let LocationImage = null;
+          let DeleteImage = 1
+          const manageQuery = 'call manage_gallary(?,?,?,?,?)';
+          await query(manageQuery, [
+            GallaryId,
+            LocationId,
+            LocationName,
+            LocationImage,
+            DeleteImage
+          ]);
+
+          return {
+            code: statusCode.success,
+            message: messages.success,
+            data: [],
+          };
+    } catch (error) {
+      throw {
+        code: statusCode.internal_server_error,
+        message: error.message,
+        data: {},
+      };
+    }
+  }
+
+  /**
+   * @description - Function to create_user_booking
+   * @param {*} info - request body data
+   */
+  async create_user_booking(req) {
+    try {
+      let reqBody = req.body;
+      let FirstName = reqBody.FirstName;
+      let LastName = reqBody.LastName;
+      let EmailAddress = reqBody.EmailAddress;
+      let PhoneNumber = reqBody.PhoneNumber;
+      let Address = reqBody.Address;
+      let PicUrl = reqBody.PicUrl;
+      let CampLocationId = reqBody.CampLocationId;
+      let AdultCount = reqBody.AdultCount;
+      let ChildrenCount = reqBody.ChildrenCount;
+      let StartDate = reqBody.StartDate;
+      let EndDate = reqBody.EndDate;
+      let SpecialNote = reqBody.SpecialNote;
+      let TentPerfer = reqBody.TentPerfer;
+
+      const createQuery = 'call create_new_booking(?,?,?,?,?,?,?,?,?,?,?,?,?)';
+      const userDbResp = await query(createQuery, [
+        FirstName,
+        LastName,
+        EmailAddress,
+        PhoneNumber,
+        Address,
+        PicUrl,
+        CampLocationId,
+        AdultCount,
+        ChildrenCount,
+        StartDate,
+        EndDate,
+        SpecialNote,
+        TentPerfer,
+      ]);
+      let finalJson = userDbResp[0][0];
+      return {
+        code: statusCode.success,
+        message: messages.success,
+        data: finalJson,
+      };
+    } catch (error) {
+      throw {
+        code: statusCode.internal_server_error,
+        message: error.message,
+        data: {},
+      };
+    }
+  }
+
+  /**
+   * @description - Function to getTodayBooking
+   * @param {*} info - request body data
+   */
+   async getTodayBooking(req) {
+    try {
+      let SearchDate= req.query.SearchDate ? req.query.SearchDate : null;
+      const getQuery = `
+                        SELECT	A.id as UserId,
+                            A.first_name as FirstName,
+                            A.last_name as LastName,
+                            A.email_id as EmailId,
+                            A.phone_number as PhoneNumber,
+                            B.status as BookingStatus,
+                            B.adult_count as AdultCount,
+                            B.children_count as ChildrenCount,
+                                DATEDIFF(Date(B.end_date),Date( B.start_date))+1 AS TotalDays,
+                            B.start_date as StartDate,
+                            B.end_date as EndDate,
+                            B.special_note as SpecialNote,
+                            B.tent_preference as TentPreference,
+                                C.location_name as LocationName,
+                                C.location_price as LocationPrice,
+                                C.discount_price as DiscountPercentage
+                        From
+                            tbl_user A 
+                                inner join  tbl_booking B
+                                      on B.user_id=A.id
+                                inner join tbl_camp_location C
+                                          on C.id=B.camp_location_id
+                        Where	Date( B.start_date)=Date(?)
+                        `;
+     let totalbooking= await query(getQuery,[SearchDate]);
+
+      return {
+        code: statusCode.success,
+        message: messages.success,
+        data: totalbooking,
+      };
+    } catch (error) {
+      throw {
+        code: statusCode.internal_server_error,
+        message: error.message,
+        data: {},
+      };
+    }
+  }
+  /**
+   * @description - Function to contactOurTeam
+   * @param {*} info - request body data
+   */
+   async contactOurTeam(req) {
+    try {
+      
+      return {
+        code: statusCode.success,
+        message: messages.success,
+        data: [],
+      };
+    } catch (error) {
       throw {
         code: statusCode.internal_server_error,
         message: error.message,
