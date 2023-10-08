@@ -16,6 +16,8 @@ router.post('/generate-booking',  api.create_user_booking);
 router.get('/get-booking',api.getTodayBooking)
 
 
+// Login
+router.post('/user-login',api.userIsLogging)
 
 
 

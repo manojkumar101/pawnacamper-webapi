@@ -101,6 +101,8 @@ class UserService {
                                     id as Id,
                                     location_name as LocationName,
                                     location_pic_url as LocationImage,
+                                    camp_provider as CampProvider,
+                                    camp_provider_pic as CampProviderPic,
                                     location_price as Price,
                                     location_description as Description,
                                     google_map_url as GoogleMapUrl,
@@ -287,6 +289,55 @@ class UserService {
       };
     }
   }
+
+
+  /**
+   * @description - Function to userIsLogging
+   * @param {*} info - request body data
+   */
+  async userIsLogging(req,res) {
+    try {
+     let  {EmailAddress ,UserPassword} = req.body;
+      const getQuery = `
+                        SELECT	*
+                        From
+                            tbl_user
+                        Where	email_id= ?
+                        `;
+     let UserDetails= await query(getQuery,[EmailAddress]);
+
+     if(!UserDetails.length){
+      return {
+        code: statusCode.unauthorized,
+        message: messages.unAuthorized,
+        data: [],
+      };
+     }
+     let loggedInUser=UserDetails[0];
+     delete loggedInUser.password
+     delete loggedInUser.is_deleted
+
+     let Token=await functions.tokenEncrypt(loggedInUser);
+
+
+      return {
+        code: statusCode.success,
+        message: messages.success,
+        data: {
+          UserDetails:loggedInUser,
+          EAuthToken:Token
+        },
+      };
+    } catch (error) {
+      throw {
+        code: statusCode.internal_server_error,
+        message: error.message,
+        data: {},
+      };
+    }
+  }
+
+
   /**
    * @description - Function to contactOurTeam
    * @param {*} info - request body data

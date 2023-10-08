@@ -132,6 +132,24 @@ const controller = {
       next(error);
     }
   },
+  //userIsLogging
+  userIsLogging: async (req, res, next) => {
+    try{
+      const loginUser = await userServiceObject
+        .userService()
+        .userIsLogging(req,res);
+
+      res.status(loginUser.code).send(
+        responseFormater(
+          loginUser.code,
+          loginUser.message,
+          loginUser.data
+        )
+      );
+    }catch(error){
+      next(error);
+    }
+  },
   //contactOurTeam
   contactOurTeam: async (req, res, next) => {
     try{
